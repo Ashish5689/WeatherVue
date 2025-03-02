@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Cloud, Droplets, Thermometer, Wind } from "lucide-react";
+import { Cloud, Droplets, Thermometer, Wind, ArrowUp, ArrowDown } from "lucide-react";
 
 interface WeatherCardProps {
   cityName?: string;
   temperature?: number;
+  maxTemperature?: number;
+  minTemperature?: number;
   weatherIcon?: string;
   humidity?: number;
   windSpeed?: number;
@@ -17,6 +19,8 @@ interface WeatherCardProps {
 const WeatherCard = ({
   cityName = "New York",
   temperature = 22,
+  maxTemperature = 25,
+  minTemperature = 18,
   weatherIcon = "cloudy",
   humidity = 65,
   windSpeed = 12,
@@ -70,8 +74,20 @@ const WeatherCard = ({
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4">
             <div className="text-6xl">{getWeatherIcon()}</div>
-            <div className="text-5xl font-bold">
-              {convertTemperature(temperature)}°{isCelsius ? "C" : "F"}
+            <div>
+              <div className="text-5xl font-bold">
+                {convertTemperature(temperature)}°{isCelsius ? "C" : "F"}
+              </div>
+              <div className="flex items-center gap-3 mt-2 text-sm">
+                <div className="flex items-center gap-1 text-red-500">
+                  <ArrowUp className="h-4 w-4" />
+                  <span>{convertTemperature(maxTemperature)}°</span>
+                </div>
+                <div className="flex items-center gap-1 text-blue-500">
+                  <ArrowDown className="h-4 w-4" />
+                  <span>{convertTemperature(minTemperature)}°</span>
+                </div>
+              </div>
             </div>
           </div>
 

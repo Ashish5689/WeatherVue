@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ArrowUp, ArrowDown, TrendingUp, TrendingDown } from "lucide-react";
 
 interface HumidityDataPoint {
   hour: string;
@@ -92,7 +93,75 @@ const HumidityChart = ({
       .attr("text-anchor", "middle")
       .text("Humidity (%)");
 
-    // Add bars
+    // Add grid lines
+    svg
+      .append("g")
+      .attr("class", "grid")
+      .call(
+        d3
+          .axisLeft(y)
+          .tickSize(-innerWidth)
+          .tickFormat(() => "")
+      )
+      .style("stroke-dasharray", "3,3")
+      .style("stroke-opacity", 0.2);
+
+    // Create line generator for trend line
+    const line = d3
+      .line<HumidityDataPoint>()
+      .x((d) => (x(d.hour) || 0) + x.bandwidth() / 2)
+      .y((d) => y(d.value))
+      .curve(d3.curveCatmullRom.alpha(0.5));
+
+    // Add trend line
+    svg
+      .append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "#3b82f6")
+      .attr("stroke-width", 2.5)
+      .attr("d", line);
+
+    // Add trend indicators between points
+    for (let i = 0; i < data.length - 1; i++) {
+      const current = data[i];
+      const next = data[i + 1];
+      const isIncreasing = next.value > current.value;
+      const isDecreasing = next.value < current.value;
+      
+      // Skip if values are the same
+      if (next.value === current.value) continue;
+      
+      // Calculate positions
+      const x1 = (x(current.hour) || 0) + x.bandwidth() / 2;
+      const y1 = y(current.value);
+      const x2 = (x(next.hour) || 0) + x.bandwidth() / 2;
+      const y2 = y(next.value);
+      
+      // Add connecting line with appropriate color
+      svg
+        .append("line")
+        .attr("x1", x1)
+        .attr("y1", y1)
+        .attr("x2", x2)
+        .attr("y2", y2)
+        .attr("stroke", isIncreasing ? "#10b981" : "#ef4444")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "5,3")
+        .attr("stroke-opacity", 0.7);
+      
+      // Add arrow indicator in the middle
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      
+      svg
+        .append("path")
+        .attr("d", d3.symbol().type(d3.symbolTriangle).size(60))
+        .attr("transform", `translate(${midX}, ${midY}) rotate(${isIncreasing ? -30 : 30})`)
+        .attr("fill", isIncreasing ? "#10b981" : "#ef4444");
+    }
+
+    // Add bars with gradient
     const barGroups = svg
       .selectAll(".bar-group")
       .data(data)
@@ -140,6 +209,44 @@ const HumidityChart = ({
         setHoveredData(null);
       });
 
+    // Add trend indicators on top of bars
+    barGroups
+      .append("g")
+      .attr("transform", (d, i) => {
+        if (i === 0) return ""; // Skip first bar
+        const prev = data[i - 1];
+        const isIncreasing = d.value > prev.value;
+        const isDecreasing = d.value < prev.value;
+        if (d.value === prev.value) return ""; // Skip if no change
+        
+        return `translate(${(x(d.hour) || 0) + x.bandwidth() / 2}, ${y(d.value) - 15})`;
+      })
+      .append("path")
+      .attr("d", (d, i) => {
+        if (i === 0) return ""; // Skip first bar
+        const prev = data[i - 1];
+        const isIncreasing = d.value > prev.value;
+        const isDecreasing = d.value < prev.value;
+        if (d.value === prev.value) return ""; // Skip if no change
+        
+        return d3.symbol().type(d3.symbolTriangle).size(60)();
+      })
+      .attr("transform", (d, i) => {
+        if (i === 0) return ""; // Skip first bar
+        const prev = data[i - 1];
+        const isIncreasing = d.value > prev.value;
+        return isIncreasing ? "rotate(180)" : "rotate(0)";
+      })
+      .attr("fill", (d, i) => {
+        if (i === 0) return "none"; // Skip first bar
+        const prev = data[i - 1];
+        const isIncreasing = d.value > prev.value;
+        const isDecreasing = d.value < prev.value;
+        if (d.value === prev.value) return "none"; // Skip if no change
+        
+        return isIncreasing ? "#10b981" : "#ef4444";
+      });
+
     // Add value labels on top of bars
     barGroups
       .append("text")
@@ -156,6 +263,16 @@ const HumidityChart = ({
     <Card className="w-full h-full p-4 bg-white/80 backdrop-blur-sm">
       <div className="flex flex-col h-full">
         <h3 className="text-lg font-medium mb-2">24-Hour Humidity Forecast</h3>
+        <div className="flex items-center justify-end mb-2 text-sm">
+          <div className="flex items-center mr-4">
+            <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+            <span>Increasing</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+            <span>Decreasing</span>
+          </div>
+        </div>
         <div className="relative flex-grow">
           <svg ref={svgRef} className="w-full h-full" />
 
@@ -172,6 +289,34 @@ const HumidityChart = ({
                   <div className="text-sm font-medium">
                     <div>Time: {hoveredData.hour}</div>
                     <div>Humidity: {hoveredData.value}%</div>
+                    {data.findIndex(d => d.hour === hoveredData.hour) > 0 && (
+                      <div className="flex items-center mt-1">
+                        <span className="mr-1">Trend:</span>
+                        {(() => {
+                          const index = data.findIndex(d => d.hour === hoveredData.hour);
+                          if (index <= 0) return null;
+                          const prev = data[index - 1];
+                          const diff = hoveredData.value - prev.value;
+                          if (diff > 0) {
+                            return (
+                              <span className="flex items-center text-green-500">
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                                +{diff}%
+                              </span>
+                            );
+                          } else if (diff < 0) {
+                            return (
+                              <span className="flex items-center text-red-500">
+                                <TrendingDown className="h-3 w-3 mr-1" />
+                                {diff}%
+                              </span>
+                            );
+                          } else {
+                            return <span>No change</span>;
+                          }
+                        })()}
+                      </div>
+                    )}
                   </div>
                 </TooltipContent>
               </Tooltip>

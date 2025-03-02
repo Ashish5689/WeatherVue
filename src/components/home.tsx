@@ -13,6 +13,8 @@ import {
 interface WeatherData {
   cityName: string;
   temperature: number;
+  maxTemperature: number;
+  minTemperature: number;
   weatherIcon: string;
   humidity: number;
   windSpeed: number;
@@ -102,6 +104,12 @@ const Home = () => {
       return {
         cityName: weatherResponse.location.name,
         temperature: Math.round(weatherResponse.current.temp_c),
+        maxTemperature: forecastResponse.forecast?.forecastday?.[0]?.day?.maxtemp_c 
+          ? Math.round(forecastResponse.forecast.forecastday[0].day.maxtemp_c) 
+          : Math.round(weatherResponse.current.temp_c),
+        minTemperature: forecastResponse.forecast?.forecastday?.[0]?.day?.mintemp_c 
+          ? Math.round(forecastResponse.forecast.forecastday[0].day.mintemp_c) 
+          : Math.round(weatherResponse.current.temp_c),
         weatherIcon: mapWeatherIconToType(
           weatherResponse.current.condition.icon,
         ),
@@ -180,6 +188,8 @@ const Home = () => {
             <WeatherCard
               cityName={weatherData.cityName}
               temperature={weatherData.temperature}
+              maxTemperature={weatherData.maxTemperature}
+              minTemperature={weatherData.minTemperature}
               weatherIcon={weatherData.weatherIcon}
               humidity={weatherData.humidity}
               windSpeed={weatherData.windSpeed}

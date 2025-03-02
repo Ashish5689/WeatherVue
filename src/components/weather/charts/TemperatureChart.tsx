@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 interface DataPoint {
   time: string;
@@ -119,6 +120,46 @@ const TemperatureChart = ({
       .attr("stroke-width", 2.5)
       .attr("d", line);
 
+    // Add trend lines between points
+    for (let i = 0; i < data.length - 1; i++) {
+      const current = data[i];
+      const next = data[i + 1];
+      const isIncreasing = next.temperature > current.temperature;
+      const isDecreasing = next.temperature < current.temperature;
+      
+      // Skip if temperature is the same
+      if (next.temperature === current.temperature) continue;
+      
+      // Add trend line
+      svg
+        .append("line")
+        .attr("x1", (x(current.time) || 0) + x.bandwidth() / 2)
+        .attr("y1", y(current.temperature))
+        .attr("x2", (x(next.time) || 0) + x.bandwidth() / 2)
+        .attr("y2", y(next.temperature))
+        .attr("stroke", isIncreasing ? "#10b981" : "#ef4444") // Green for increase, red for decrease
+        .attr("stroke-width", 3)
+        .attr("stroke-opacity", 0.6)
+        .attr("stroke-dasharray", "5,3");
+      
+      // Add trend arrow in the middle of the line
+      const midX = ((x(current.time) || 0) + (x(next.time) || 0) + x.bandwidth()) / 2;
+      const midY = (y(current.temperature) + y(next.temperature)) / 2;
+      
+      // Calculate angle for arrow
+      const angle = Math.atan2(
+        y(next.temperature) - y(current.temperature),
+        (x(next.time) || 0) - (x(current.time) || 0)
+      ) * 180 / Math.PI;
+      
+      // Add arrow
+      svg
+        .append("path")
+        .attr("d", d3.symbol().type(d3.symbolTriangle).size(80))
+        .attr("transform", `translate(${midX}, ${midY}) rotate(${isIncreasing ? 90 : -90})`)
+        .attr("fill", isIncreasing ? "#10b981" : "#ef4444");
+    }
+
     // Add the points
     const points = svg
       .selectAll(".point")
@@ -139,6 +180,20 @@ const TemperatureChart = ({
         d3.select(this).attr("r", 5).attr("fill", "#3b82f6");
         setHoveredPoint(null);
       });
+
+    // Add temperature labels above points
+    svg
+      .selectAll(".temp-label")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("class", "temp-label")
+      .attr("x", (d) => (x(d.time) || 0) + x.bandwidth() / 2)
+      .attr("y", (d) => y(d.temperature) - 15)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "10px")
+      .attr("fill", "#64748b")
+      .text((d) => `${d.temperature}°${unit === "celsius" ? "C" : "F"}`);
 
     // Add area under the line
     const area = d3
@@ -183,6 +238,16 @@ const TemperatureChart = ({
         <h3 className="text-lg font-medium mb-4">
           24-Hour Temperature Forecast
         </h3>
+        <div className="flex items-center justify-end mb-2 text-sm">
+          <div className="flex items-center mr-4">
+            <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+            <span>Increasing</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+            <span>Decreasing</span>
+          </div>
+        </div>
         <div className="relative flex-grow">
           <svg ref={svgRef} className="w-full h-full" />
 
