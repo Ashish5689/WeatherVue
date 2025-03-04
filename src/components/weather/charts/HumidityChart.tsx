@@ -18,6 +18,8 @@ interface HumidityChartProps {
   data?: HumidityDataPoint[];
   width?: number;
   height?: number;
+  hoveredHour?: string | null;
+  setHoveredHour?: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const HumidityChart = ({
@@ -33,6 +35,8 @@ const HumidityChart = ({
   ],
   width = 1160,
   height = 400,
+  hoveredHour = null,
+  setHoveredHour = () => {},
 }: HumidityChartProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredData, setHoveredData] = useState<HumidityDataPoint | null>(

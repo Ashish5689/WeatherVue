@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import SearchBar from "./weather/SearchBar";
 import WeatherCard from "./weather/WeatherCard";
-import D3ChartContainer from "./weather/D3ChartContainer";
 import LoadingState from "./weather/LoadingState";
 import ErrorState from "./weather/ErrorState";
+import { motion } from "framer-motion";
+import { CloudSun, MapPin, Info } from "lucide-react";
 import {
   fetchWeather,
   fetchForecast,
@@ -20,7 +21,7 @@ interface WeatherData {
   windSpeed: number;
   feelsLike: number;
   weatherDescription: string;
-  forecast: {
+  forecast?: {
     time: string;
     temperature: number;
     humidity: number;
@@ -42,9 +43,6 @@ const Home = () => {
     { id: "2", location: "London" },
     { id: "3", location: "Tokyo" },
   ]);
-  const [temperatureUnit, setTemperatureUnit] = useState<
-    "celsius" | "fahrenheit"
-  >("celsius");
 
   // Fetch weather data from API
   const fetchWeatherData = async (location: string): Promise<WeatherData> => {
@@ -54,51 +52,6 @@ const Home = () => {
         fetchWeather(location),
         fetchForecast(location),
       ]);
-
-      // Process forecast data to get 24-hour forecast (8 points, every 3 hours)
-      // Safely access forecast data
-      const forecastHours =
-        forecastResponse.forecast?.forecastday?.[0]?.hour || [];
-
-      // Create 8 forecast points with 3-hour intervals
-      const forecastData = [];
-
-      if (forecastHours.length > 0) {
-        const currentHour = new Date().getHours();
-
-        // Get 8 forecast points starting from current hour, with 3-hour intervals
-        for (let i = 0; i < 24 && forecastData.length < 8; i += 3) {
-          const hourIndex = (currentHour + i) % 24;
-          const item = forecastHours[hourIndex];
-
-          if (item && item.time) {
-            // Format time (e.g., "2023-04-04 13:00" to "13:00")
-            const timeParts = item.time.split(" ");
-            const timeString =
-              timeParts.length > 1
-                ? timeParts[1].substring(0, 5)
-                : `${hourIndex}:00`;
-
-            forecastData.push({
-              time: timeString,
-              temperature: Math.round(item.temp_c),
-              humidity: item.humidity,
-            });
-          }
-        }
-      }
-
-      // If we couldn't get forecast data, create dummy data
-      if (forecastData.length === 0) {
-        for (let i = 0; i < 8; i++) {
-          const hour = (new Date().getHours() + i * 3) % 24;
-          forecastData.push({
-            time: `${hour.toString().padStart(2, "0")}:00`,
-            temperature: Math.round(weatherResponse.current.temp_c),
-            humidity: weatherResponse.current.humidity,
-          });
-        }
-      }
 
       // Map the data to our application's format
       return {
@@ -117,7 +70,7 @@ const Home = () => {
         windSpeed: Math.round(weatherResponse.current.wind_kph),
         feelsLike: Math.round(weatherResponse.current.feelslike_c),
         weatherDescription: weatherResponse.current.condition.text,
-        forecast: forecastData,
+        forecast: [], // Empty array since we're not using forecast data
       };
     } catch (error) {
       throw error;
@@ -167,11 +120,24 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-slate-800 mb-8">
-          Weather Dashboard
-        </h1>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col items-center justify-center mb-8"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <CloudSun className="h-10 w-10 text-blue-500" />
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-800 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              WeatherVue
+            </h1>
+          </div>
+          <p className="text-slate-500 text-center max-w-lg">
+            Explore real-time weather information and forecasts with beautiful visualizations
+          </p>
+        </motion.div>
 
         <SearchBar
           onSearch={handleSearch}
@@ -182,9 +148,24 @@ const Home = () => {
         {isLoading ? (
           <LoadingState message="Fetching weather data..." />
         ) : error ? (
-          <ErrorState message={error} />
+          <ErrorState 
+            message={error} 
+            onRetry={() => handleSearch(searchInput || (searchHistory.length > 0 ? searchHistory[0].location : ""))} 
+          />
         ) : weatherData ? (
-          <div className="space-y-6 mt-8">
+          <motion.div 
+            className="space-y-6 mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex items-center justify-center mb-2">
+              <div className="bg-white/30 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2 text-blue-600 text-sm border border-blue-100">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>Currently viewing weather for <strong>{weatherData.cityName}</strong></span>
+              </div>
+            </div>
+            
             <WeatherCard
               cityName={weatherData.cityName}
               temperature={weatherData.temperature}
@@ -196,19 +177,41 @@ const Home = () => {
               feelsLike={weatherData.feelsLike}
               weatherDescription={weatherData.weatherDescription}
             />
-
-            <D3ChartContainer
-              forecastData={weatherData.forecast}
-              temperatureUnit={temperatureUnit}
-            />
-          </div>
+            
+            <motion.div
+              className="w-full rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 p-4 text-center text-sm text-slate-600 flex items-center justify-center gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+            >
+              <Info className="h-4 w-4 text-blue-500" />
+              <p>Weather data is updated every 3 hours. Last updated: {new Date().toLocaleTimeString()}</p>
+            </motion.div>
+          </motion.div>
         ) : (
-          <div className="mt-8 p-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-center">
-            <p className="text-slate-600">
-              Enter a location to see weather information
-            </p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-8 p-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-center"
+          >
+            <div className="flex flex-col items-center justify-center gap-4">
+              <CloudSun className="h-16 w-16 text-blue-300" />
+              <p className="text-slate-600 max-w-md">
+                Enter a location above to see detailed weather information and forecasts
+              </p>
+            </div>
+          </motion.div>
         )}
+        
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="mt-16 text-center text-sm text-slate-500"
+        >
+          <p>© {new Date().getFullYear()} WeatherVue • Beautiful Weather Forecasts</p>
+        </motion.footer>
       </div>
     </div>
   );

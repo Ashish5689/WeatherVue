@@ -17,6 +17,8 @@ interface DataPoint {
 interface TemperatureChartProps {
   data?: DataPoint[];
   unit?: "celsius" | "fahrenheit";
+  hoveredHour?: string | null;
+  setHoveredHour?: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const TemperatureChart = ({
@@ -31,6 +33,8 @@ const TemperatureChart = ({
     { time: "21:00", temperature: 19 },
   ],
   unit = "celsius",
+  hoveredHour = null,
+  setHoveredHour = () => {},
 }: TemperatureChartProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
