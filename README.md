@@ -7,7 +7,7 @@
 
   <p>
     <a href="#features">Features</a> •
-    <a href="#live-demo">Live Demo</a> •
+    <a href="https://weathercue.netlify.app/" target="_blank">Live Demo</a> •
     <a href="#screenshots">Screenshots</a> •
     <a href="#installation">Installation</a> •
     <a href="#usage">Usage</a> •
@@ -31,7 +31,7 @@
 
 ## 🌐 Live Demo
 
-Check out the live demo: [WeatherVue Demo](https://weather-vue-demo.vercel.app)
+Check out the live demo: [WeatherVue Demo](https://weathercue.netlify.app/)
 
 ## 📸 Screenshots
 
@@ -57,7 +57,7 @@ Check out the live demo: [WeatherVue Demo](https://weather-vue-demo.vercel.app)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/WeatherVue.git
+git clone https://github.com/Ashish5689/WeatherVue.git
 
 # Navigate to the project directory
 cd WeatherVue
@@ -155,10 +155,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <p>Made with ❤️ by Your Name</p>
+  <p>Made with ❤️ by Ashish jha</p>
   <p>
-    <a href="https://github.com/yourusername">GitHub</a> •
-    <a href="https://twitter.com/yourusername">Twitter</a> •
-    <a href="https://linkedin.com/in/yourusername">LinkedIn</a>
+    <a href="https://github.com/Ashish5689/">GitHub</a> •
+    <a href="https://www.linkedin.com/in/ashish-jha5689/">LinkedIn</a>
   </p>
 </div>
