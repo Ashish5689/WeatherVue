@@ -21,12 +21,13 @@
 
 - 📱 **Responsive Design** - Beautiful UI that works on all devices
 - 🌡️ **Real-time Weather Data** - Current conditions with temperature, humidity, and wind speed
-- 📊 **Interactive Charts** - Visualize temperature and humidity trends with D3.js
+- 📊 **Interactive D3.js Charts** - Visualize temperature and humidity trends with smooth animations
 - 🔍 **Location Search** - Search for weather in any city worldwide
-- 📈 **Temperature Trends** - Visual indicators showing temperature increases and decreases
+- 📈 **Temperature Trends** - Visual indicators showing temperature changes over time
 - 💧 **Humidity Analysis** - Track humidity changes throughout the day
 - 🌙 **Forecast** - 24-hour weather forecast with detailed information
 - 🔄 **Unit Conversion** - Toggle between Celsius and Fahrenheit
+- 🌐 **No API Key Required** - Uses Open-Meteo's free weather API
 
 ## 🌐 Live Demo
 
@@ -43,11 +44,11 @@ Check out the live demo: [WeatherVue Demo](https://weather-vue-demo.vercel.app)
   <div style="display: flex; justify-content: space-between;">
     <div style="flex: 1; padding: 0 10px;">
       <img src="public/images/temperature-chart.svg" alt="Temperature Chart" width="380">
-      <p><em>Temperature forecast with trend indicators</em></p>
+      <p><em>Temperature forecast with interactive D3.js visualization</em></p>
     </div>
     <div style="flex: 1; padding: 0 10px;">
       <img src="public/images/humidity-chart.svg" alt="Humidity Chart" width="380">
-      <p><em>Humidity forecast with trend analysis</em></p>
+      <p><em>Humidity forecast with interactive D3.js visualization</em></p>
     </div>
   </div>
 </div>
@@ -64,9 +65,11 @@ cd WeatherVue
 # Install dependencies
 npm install
 
-# Create a .env file with your WeatherAPI key
-echo "VITE_WEATHER_API_KEY=your_api_key_here" > .env
+# Install D3.js and its types
+npm install d3 @types/d3
 ```
+
+> **Note**: If you encounter permission issues when installing D3.js, check the `D3_INSTALL_INSTRUCTIONS.md` file for alternative installation methods.
 
 ## 📋 Usage
 
@@ -89,31 +92,51 @@ npm run preview
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
 - **Data Visualization**: [D3.js](https://d3js.org/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Weather Data**: [WeatherAPI](https://www.weatherapi.com/)
+- **Weather Data**: [Open-Meteo API](https://open-meteo.com/)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/)
 
 ## 🌩️ API
 
-WeatherVue uses the [WeatherAPI](https://www.weatherapi.com/) to fetch weather data. You'll need to:
+WeatherVue uses the [Open-Meteo API](https://open-meteo.com/) to fetch weather data:
 
-1. Sign up for a free API key at [WeatherAPI.com](https://www.weatherapi.com/)
-2. Add your API key to the `.env` file:
+- **Free to use** - No API key required for non-commercial use
+- **High Resolution** - Detailed weather data with global coverage
+- **Accurate Forecasts** - Uses data from national weather services
+- **Hourly Updates** - Weather models updated every hour
+- **Historical Data** - Access to historical weather information
 
-```
-VITE_WEATHER_API_KEY=your_api_key_here
-```
+The implementation includes:
 
-## 📊 Data Visualization
+- Current weather conditions
+- 24-hour hourly forecast
+- Temperature and humidity charts
+- Wind speed and "feels like" temperature
+
+## 📊 Data Visualization Features
 
 WeatherVue features advanced data visualization using D3.js:
 
-- **Temperature Chart**: Shows 24-hour temperature forecast with trend indicators
-  - Green arrows indicate temperature increases
-  - Red arrows indicate temperature decreases
+- **Temperature Chart**:
+  - Smooth gradient area fill
+  - Curved lines for elegant visualization
+  - Interactive tooltips showing precise temperature values
+  - Time-based x-axis with hour labels
+  - Properly scaled temperature values on y-axis
+  - Responsive design that adapts to screen size
   
-- **Humidity Chart**: Displays humidity changes throughout the day
-  - Interactive bars with gradient fill
-  - Trend indicators between time points
-  - Detailed tooltips showing exact changes
+- **Humidity Chart**:
+  - Beautiful blue gradient visualization
+  - Interactive tooltips showing precise humidity percentages
+  - Visual grid guides for better readability
+  - Time-based x-axis aligned with temperature chart
+  - Properly scaled 0-100% humidity values
+
+Both charts feature:
+- Automatic data point highlighting on hover
+- Smooth animations and transitions
+- Proper timezone handling
+- Elegant visual styling that matches the UI
+- Responsive sizing for all devices
 
 ## 🤝 Contributing
 

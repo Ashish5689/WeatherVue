@@ -3,8 +3,9 @@ import SearchBar from "./weather/SearchBar";
 import WeatherCard from "./weather/WeatherCard";
 import LoadingState from "./weather/LoadingState";
 import ErrorState from "./weather/ErrorState";
+import ForecastCharts from "./weather/ForecastCharts";
 import { motion } from "framer-motion";
-import { CloudSun, MapPin, Info } from "lucide-react";
+import { CloudSun, MapPin, Info, BarChart } from "lucide-react";
 import {
   fetchWeather,
   fetchForecast,
@@ -53,6 +54,32 @@ const Home = () => {
         fetchForecast(location),
       ]);
 
+      // Process hourly forecast data for charts
+      // Only use the next 24 hours of forecast data (or less if not available)
+      const hourlyData = forecastResponse.forecast.forecastday[0].hour;
+      
+      // Start from the current hour or the first available hour
+      const currentHour = new Date().getHours();
+      const currentDate = new Date().toISOString().split('T')[0];
+      
+      // Find today's forecasts starting from current hour
+      const forecastData = hourlyData
+        .filter(hourData => {
+          const hourDate = new Date(hourData.time);
+          const dataDate = hourDate.toISOString().split('T')[0];
+          const dataHour = hourDate.getHours();
+          
+          // Keep data from current date and hour onwards
+          return (dataDate === currentDate && dataHour >= currentHour) || 
+                 (dataDate > currentDate);
+        })
+        .slice(0, 24) // Limit to 24 hours
+        .map(hourData => ({
+          time: hourData.time,
+          temperature: hourData.temp_c,
+          humidity: hourData.humidity
+        }));
+
       // Map the data to our application's format
       return {
         cityName: weatherResponse.location.name,
@@ -70,7 +97,7 @@ const Home = () => {
         windSpeed: Math.round(weatherResponse.current.wind_kph),
         feelsLike: Math.round(weatherResponse.current.feelslike_c),
         weatherDescription: weatherResponse.current.condition.text,
-        forecast: [], // Empty array since we're not using forecast data
+        forecast: forecastData, // Include forecast data for charts
       };
     } catch (error) {
       throw error;
@@ -177,6 +204,21 @@ const Home = () => {
               feelsLike={weatherData.feelsLike}
               weatherDescription={weatherData.weatherDescription}
             />
+
+            {weatherData.forecast && weatherData.forecast.length > 0 && (
+              <motion.div
+                className="mt-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart className="h-5 w-5 text-blue-500" />
+                  <h2 className="text-xl font-semibold text-slate-700">Forecast Charts</h2>
+                </div>
+                <ForecastCharts forecast={weatherData.forecast} />
+              </motion.div>
+            )}
             
             <motion.div
               className="w-full rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 p-4 text-center text-sm text-slate-600 flex items-center justify-center gap-2"
@@ -211,6 +253,7 @@ const Home = () => {
           className="mt-16 text-center text-sm text-slate-500"
         >
           <p>© {new Date().getFullYear()} WeatherVue • Beautiful Weather Forecasts</p>
+          <p className="mt-1">Powered by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Open-Meteo</a></p>
         </motion.footer>
       </div>
     </div>
